@@ -1,28 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { Post } from '../model/entities/post';
-import { PostService } from '../model/services/postService';
+import React from 'react';
+import { Text, View, StyleSheet, ActivityIndicator, Button } from 'react-native';
+import { usePosts } from '../viewmodel/usePosts';
 
 export default function PostList() {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [posts, setPosts] = useState<Post[]>([]);
-
-    useEffect(() => {
-        const loadPosts = async () => {
-            setLoading(true);
-            try {
-                const data = await PostService.getPosts();
-                setPosts(data);
-            } catch (err) {
-                setError('Erro ao carregar os posts');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadPosts();
-    }, []);
+    const { posts, loading, error, refresh } = usePosts();
 
     if (loading)
         return (
@@ -32,10 +13,18 @@ export default function PostList() {
             </View>
         );
 
-    if (error) return <Text>{error}</Text>;
+    if (error)
+        return (
+            <View style={styles.containerSpinner}>
+                <Text>{error}</Text>
+                <Button title="Recarregar" onPress={refresh} />
+            </View>
+        );
 
     return (
         <View style={styles.container}>
+            <View style={{height: 80}}></View>
+            <Button title="Recarregar" onPress={refresh} />
             {posts.map((post) => (
                 <View key={post.id} style={styles.card}>
                     <Text style={styles.title}>{post.title}</Text>
@@ -53,7 +42,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     containerSpinner: {
-        height: '100%',
+        flex: 1,
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
